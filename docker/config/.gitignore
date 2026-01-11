@@ -1,0 +1,5 @@
+# Ignore device-specific config files (contain serial numbers)
+PHANToM0.ini
+PHANToM*.ini
+PHANToMCalibration*
+!*.template

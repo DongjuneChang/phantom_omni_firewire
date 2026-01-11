@@ -13,9 +13,25 @@ ROS2 Humble driver for **Sensable Phantom Omni** haptic device via FireWire (IEE
 > Many labs still have the original Phantom Omni with FireWire (IEEE 1394) interface.
 > This driver uses **OpenHaptics AE 3.0** with **JUJU driver** to support these legacy devices on modern Linux.
 
-## Docker Usage (Recommended)
+## Quick Start (Docker)
 
-Docker setup instructions coming soon.
+```bash
+# 1. Clone repository
+git clone https://github.com/DongjuneChang/phantom_omni_firewire.git
+cd phantom_omni_firewire
+
+# 2. Setup host (FireWire kernel modules)
+cd docker
+chmod +x setup_host.sh
+sudo ./setup_host.sh
+
+# 3. Build and run
+docker compose build
+docker compose run --rm phantom
+
+# 4. Inside container
+ros2 launch omni_common omni_state.launch.py
+```
 
 ## Native Build
 
@@ -25,8 +41,9 @@ Docker setup instructions coming soon.
 
 source /opt/ros/humble/setup.bash
 cd ~/ros2_ws/src
-# Clone this repository
-cd ..
+git clone https://github.com/DongjuneChang/phantom_omni_firewire.git
+cd phantom_omni_firewire/ros2
+cd ../..
 colcon build --symlink-install
 source install/setup.bash
 ```
@@ -58,7 +75,7 @@ ros2 launch omni_common omni_state.launch.py rviz:=true
 
 ## Configuration
 
-Joint calibration in `omni_common/config/phantom_omni.yaml`:
+Joint calibration in `ros2/omni_common/config/phantom_omni.yaml`:
 
 ```yaml
 omni_haptic_node:
@@ -67,13 +84,23 @@ omni_haptic_node:
     joint_offsets: [0.0, 0.0, 0.0, 3.14159, -2.35619, -3.14159]
 ```
 
-## Packages
+## Repository Structure
 
-| Package | Description |
-|---------|-------------|
-| `omni_common` | Driver node, launch files, config |
-| `omni_description` | URDF model and meshes |
-| `omni_msgs` | Custom message types |
+```
+phantom_omni_firewire/
+├── docker/                 # Docker setup (recommended)
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── openhaptics/        # SDK files
+│   ├── config/             # Device config
+│   └── setup_host.sh       # Host preparation script
+├── ros2/                   # ROS2 packages
+│   ├── omni_common/        # Driver node, launch, config
+│   ├── omni_description/   # URDF model and meshes
+│   └── omni_msgs/          # Custom message types
+├── LICENSE
+└── README.md
+```
 
 ## Acknowledgments
 

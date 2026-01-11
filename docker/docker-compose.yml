@@ -1,0 +1,99 @@
+# Phantom Omni ROS2 Driver (FireWire Version)
+#
+# OpenHaptics AE 3.0 + JUJU FireWire Driver
+# Based on: https://github.com/jhu-cisst-external/phantom-omni-1394-drivers
+#
+# Prerequisites:
+#   1. Run setup_host.sh to prepare the host system
+#   2. Connect Phantom Omni via FireWire (Thunderbolt adapter)
+#   3. Power on the device
+#
+# Usage:
+#   cd docker
+#   docker compose build
+#   docker compose run --rm phantom
+
+services:
+  phantom:
+    container_name: phantom-ros2
+    image: phantom-ros2:humble
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - OPENHAPTICS_SDK_DIR=openhaptics
+    privileged: true
+    network_mode: "host"
+
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+      - OH_SDK_BASE=/opt/OpenHaptics/Developer/3.4-0
+
+    devices:
+      - /dev/fw0:/dev/fw0
+      - /dev/fw1:/dev/fw1
+      - /dev/fw2:/dev/fw2
+
+    volumes:
+      - /dev/shm:/dev/shm
+      - /dev:/dev:ro
+      # ROS2 packages (relative path)
+      - ../ros2:/workspace/src/phantom_omni:rw
+      # Named volumes for build cache
+      - phantom_build:/workspace/build
+      - phantom_install:/workspace/install
+      - phantom_log:/workspace/log
+      # X11 for RViz
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:ro
+      # Phantom device config
+      - ./config:/etc/SensAble/PHANToMDeviceDrivers:rw
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+
+    stdin_open: true
+    tty: true
+
+    command: >
+      bash -c "
+        echo '============================================' &&
+        echo '  Phantom Omni ROS2 Driver (FireWire)' &&
+        echo '============================================' &&
+        echo '' &&
+        echo '=== FireWire Devices ===' &&
+        ls -la /dev/fw* 2>/dev/null || echo 'WARNING: No FireWire devices!' &&
+        echo '' &&
+        source /opt/ros/humble/setup.bash &&
+        cd /workspace &&
+        if [ -f /workspace/install/setup.bash ]; then
+          echo '=== Using cached build ===' &&
+          source /workspace/install/setup.bash
+        else
+          echo '=== First run: Building ROS2 Workspace ===' &&
+          colcon build --symlink-install 2>&1 | tail -10 &&
+          source /workspace/install/setup.bash
+        fi &&
+        echo '' &&
+        echo '============================================' &&
+        echo '  Commands:' &&
+        echo '============================================' &&
+        echo '  ros2 launch omni_common omni_state.launch.py  # Start driver' &&
+        echo '  rviz2                                          # Visualization' &&
+        echo '  ros2 topic echo /phantom/state                 # View state' &&
+        echo '  colcon build --symlink-install                 # Rebuild' &&
+        echo '' &&
+        exec bash
+      "
+
+volumes:
+  phantom_build:
+  phantom_install:
+  phantom_log:
+
