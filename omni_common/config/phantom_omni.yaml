@@ -1,0 +1,35 @@
+# Phantom Omni ROS2 Driver Configuration
+#
+# Device-specific joint calibration for older Phantom Omni (FireWire)
+# Reference: https://github.com/jhu-saw/sawSensablePhantom
+#
+# To find correct offsets for your device:
+# 1. Place stylus in inkwell
+# 2. Start driver with joint_offsets all zeros
+# 3. Check /phantom/joint_states values
+# 4. Update joint_offsets so inkwell position shows [0,0,0,0,0,0]
+
+omni_haptic_node:
+  ros__parameters:
+    omni_name: "phantom"
+    reference_frame: "base"
+    units: "mm"
+    publish_rate: 1000
+
+    # Joint mapping: [waist, shoulder, elbow, yaw, pitch, roll]
+    #
+    # joint_scales: Sign correction for each joint axis
+    #   1.0  = same direction as OpenHaptics
+    #  -1.0  = inverted direction
+    #
+    # joint_offsets: Zero position offset (radians)
+    #   Add this value to make inkwell position = zero
+
+    # Default values (original ROS1 driver)
+    # These work for most Phantom Omni devices but may need adjustment
+    joint_scales: [-1.0, 1.0, 1.0, -1.0, -1.0, -1.0]
+    joint_offsets: [0.0, 0.0, 0.0, 3.14159, -2.35619, -3.14159]
+
+    # Alternative: sawSensablePhantom style (for some older Omni)
+    # joint_scales: [1.0, 1.0, 1.0, 1.0, -1.0, 1.0]
+    # joint_offsets: [0.0, 0.0, 0.0, 3.66519, -3.80482, 3.08923]
